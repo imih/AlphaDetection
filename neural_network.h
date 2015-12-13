@@ -30,7 +30,7 @@ class NeuralNetwork {
   std::vector<double> predict2(const Gesture& g);
 
   const int kBlockSizePerClass = 2;
-  const double eps = 10e-6;
+  const double eps = 0.0005;
 
   int M_;
   int N_;

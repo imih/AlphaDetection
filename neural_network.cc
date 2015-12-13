@@ -11,22 +11,7 @@ using std::vector;
 NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
                              string train_data_filename)
     : M_(architecture[0] / 2) {
-  std::ifstream trainDataStream(train_data_filename);
-  string line;
-  while (std::getline(trainDataStream, line)) {
-    train_data_.push_back(TrainSample::parse(line));
-    while ((int)train_data_.back().size() > M_) {
-      assert(train_data_.back().back().x > 1);
-      train_data_.back().pop_back();
-    }
-    if (M_ != (int)train_data_.back().size()) {
-      puts(line.c_str());
-    }
-    assert(M_ == (int)train_data_.back().size());
-  }
-  trainDataStream.close();
-  N_ = (int)train_data_.size();
-  printf("N: %d\n", N_);
+  fill_train_data(train_data_filename);
   if (alg_type == 1) {
     Epoch e;
     for (int i = 0; i < N_; ++i) {
@@ -82,13 +67,39 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
   avg_squared_error();
 }
 
+NeuralNetwork::NeuralNetwork(const string& network_filepath, int alg_type,
+                             const string& train_data_filename) {
+  // TODO
+}
+
 void NeuralNetwork::train() {
   int it = -1;
   while (avg_squared_error() > eps) {
     it++;
     printf("Ep %d. ", it);
     train(epoches_[it % (int)epoches_.size()]);
+    if(it % 100 == 0) {
+      save("NN" + std::to_string(it));
+    }
   }
+}
+
+void NeuralNetwork::save(const string& file_name) {
+  FILE* f = fopen(file_name.c_str(), "w");
+  fprintf(f, "%lf %lf %lf\n", eps, kMaxWVal, kNi);
+  for (int i = 0; i < (int) nn_.size(); ++i) {
+    fprintf(f, "%d%c", (int) nn_[i].size(),
+            i < (int) nn_.size() - 1 ? ' ' : '\n');
+  }
+  for (int i = 0; i < (int) nn_.size(); ++i) {
+    for (int j = 0; j < (int) nn_[i].size(); ++j) {
+      vector<double> w = nn_[i][j].w();
+      for (int k = 0; k < (int) w.size(); ++k) {
+        fprintf(f, "%lf%c", w[k], k < (int) w.size() - 1 ? ' ' : '\n');
+      }
+    }
+  }
+  fclose(f);
 }
 
 // Epoch: vector<int>
@@ -158,6 +169,25 @@ double NeuralNetwork::avg_squared_error() {
   }
   printf("%lf\n", ret / (2 * N_));
   return ret / (2 * N_);
+}
+
+void NeuralNetwork::fill_train_data(const std::string& train_data_filename) {
+  std::ifstream trainDataStream(train_data_filename);
+  string line;
+  while (std::getline(trainDataStream, line)) {
+    train_data_.push_back(TrainSample::parse(line));
+    while ((int)train_data_.back().size() > M_) {
+      assert(train_data_.back().back().x > 1);
+      train_data_.back().pop_back();
+    }
+    if (M_ != (int)train_data_.back().size()) {
+      puts(line.c_str());
+    }
+    assert(M_ == (int)train_data_.back().size());
+  }
+  trainDataStream.close();
+  N_ = (int)train_data_.size();
+  printf("N: %d\n", N_);
 }
 
 string NeuralNetwork::predict(const Gesture& g) {
