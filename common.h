@@ -13,6 +13,7 @@ const std::vector<std::string> kClassNames =
 const std::vector<std::string> kClassCode = std::vector<std::string>(
     {"1,0,0,0,0", "0,1,0,0,0", "0,0,1,0,0", "0,0,0,1,0", "0,0,0,0,1"});
 const double kMaxWVal = 0.2;
+const double kNi = 10e-3;
 
 struct Point {
   double x;
@@ -28,8 +29,6 @@ class Gesture : public std::vector<Point> {
  public:
   Gesture() { target_class_ = -1; }
 
-  static Gesture parse(const std::string& csv_format);
-
   void normalize(int M);
 
   std::vector<double> serialize() const;
@@ -37,6 +36,7 @@ class Gesture : public std::vector<Point> {
 
   void setTargetClass(int target_class) { target_class_ = target_class; }
   int target_class() const { return target_class_; }
+  std::vector<double> getT();
 
  private:
   Point interpolate(double cur_dist, double target_dist, const Point& a,
@@ -44,6 +44,17 @@ class Gesture : public std::vector<Point> {
   double length();
 
   int target_class_;
+};
+
+class TrainSample : public Gesture {
+ public:
+  static TrainSample parse(const std::string& csv_format);
+  void clearY() { y_.clear(); }
+  void addY(std::vector<double> y) { y_.push_back(y); }
+  double getY(int layerIdx, int valueIdx) { return y_[layerIdx][valueIdx]; }
+
+ private:
+  std::vector<std::vector<double> > y_;
 };
 
 template <typename T>

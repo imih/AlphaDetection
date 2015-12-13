@@ -7,6 +7,7 @@
 #include <vector>
 
 class Layer;
+class TrainSample;
 class NeuralNetwork {
  public:
   NeuralNetwork(int alg_type, std::vector<int> architecture,
@@ -20,6 +21,7 @@ class NeuralNetwork {
   typedef std::vector<int> Epoch;
   void train(const Epoch& epoch);
   double avg_squared_error();
+  std::vector<double> predict2(TrainSample& trainSample);
   std::vector<double> predict2(const Gesture& g);
 
   const int kBlockSizePerClass = 2;
@@ -27,7 +29,7 @@ class NeuralNetwork {
 
   int M_;
   int N_;
-  std::vector<Gesture> train_data_;
+  std::vector<TrainSample> train_data_;
 
   std::vector<Epoch> epoches_;
   std::vector<Layer> nn_;
@@ -41,7 +43,10 @@ class Layer : public std::vector<Neuron> {
     }
   }
 
-  std::vector<double> eval_layer(std::vector<double>);
+  std::vector<double> eval_layer(std::vector<double>) const;
+
+  std::vector<double> w(int neuronNo) { return at(neuronNo).w(); }
 
   int layer_size() { return (int)size(); }
 };
+

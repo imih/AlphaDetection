@@ -13,9 +13,9 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
   std::ifstream trainDataStream(train_data_filename);
   string line;
   while (std::getline(trainDataStream, line)) {
-    train_data_.push_back(Gesture::parse(line));
+    train_data_.push_back(TrainSample::parse(line));
   }
-  assert(M_ == (int)train_data_.back().size());
+  assert(M_ == train_data_.back().size());
   N_ = (int)train_data_.size();
   if (alg_type == 1) {
     Epoch e;
@@ -35,7 +35,7 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
       pos[train_data_[i].target_class()] = i;
     }
 
-    train_data_.push_back(Gesture());
+    train_data_.push_back(TrainSample());
     while (true) {
       Epoch e;
       for (int i = 0; i < kClassNum; ++i) {
@@ -70,25 +70,71 @@ void NeuralNetwork::train() {
   while (avg_squared_error() > eps) {
     it++;
     printf("\tEp %d. \n", it);
-    train(epoches_[it % (int) epoches_.size()]);
+    train(epoches_[it % (int)epoches_.size()]);
   }
 }
 
+// Epoch: vector<int>
 void NeuralNetwork::train(const Epoch& epoch) {
-  // TODO
+  vector<vector<double> > t;  // t[i][j] -> ith example, j-th target
+  for (int i = 0; i < (int)epoch.size(); ++i) {
+    t.push_back(train_data_[epoch[i]].getT());
+    predict2(train_data_[epoch[i]]);
+  }
+
+  vector<vector<double> > delta;
+  vector<Layer> nnNew = nn_;
+  for (int i = (int)nn_.size(); i > 0; --i) {
+    vector<vector<double> > newDelta;
+    for (int j = 0; j < (int)epoch.size(); ++j) {
+      vector<double> newD;
+      TrainSample& ts = train_data_[epoch[j]];
+      for (int k = 0; k < (int)nn_[i].size(); ++k) {
+        // layer i, sample j, s, neuron k
+        if (i == (int)epoch.size() - 1) {
+          double d =
+              ts.getY(i, k) * (1 - ts.getY(i, k)) * (ts.getT()[k] - ts.getY(i, k));
+          newD.push_back(d);
+        } else {
+          double d = 0;
+          for (int o = 0; o < delta[j].size(); ++o) {
+            // TODO not sure!
+            assert((int)delta[j].size() == (int)nn_[i].w(k).size());
+            d += (delta[j][o] * nn_[i].w(k)[o]);
+          }
+          d *= ts.getY(i, k) * (1 - ts.getY(i, k));
+          newD.push_back(d);
+        }
+      }
+      newDelta.push_back(newD);
+    }
+    delta = newDelta;
+
+    for (int k = 0; k < (int)nn_[i].size(); ++k) {
+      for (int j = 0; j <  nn_[i][k].sizeW(); ++j) {
+        double nabla = 0;
+        for (int s = 0; s < (int)epoch.size(); ++i) {
+          TrainSample& ts = train_data_[epoch[s]];
+          nabla += delta[s][j] * ts.getY(s, k);
+        }
+        nnNew[i][k].setW(j, nn_[i][k].w()[j] + kNi * nabla / (int)epoch.size());
+      }
+    }
+  }
+  nn_ = nnNew;
 }
 
 double NeuralNetwork::avg_squared_error() {
   double ret = 0;
-  for (const Gesture& g : train_data_) {
+  for (const auto& g : train_data_) {
     vector<double> pred = predict2(g);
     for (int i = 0; i < kClassNum; ++i) {
       ret += ((g.target_class() == i) - pred[i]) *
              ((g.target_class() == i) - pred[i]);
     }
   }
-  printf("%lf\n", ret / N_);
-  return ret / N_;
+  printf("%lf\n", ret / (2 * N_));
+  return ret / (2 * N_);
 }
 
 string NeuralNetwork::predict(const Gesture& g) {
@@ -100,19 +146,31 @@ string NeuralNetwork::predict(const Gesture& g) {
   return kClassCode[targetClassId];
 }
 
-vector<double> NeuralNetwork::predict2(const Gesture& g) {
-  vector<double> x = g.serialize();
-  for(Layer l : nn_) {
+std::vector<double> NeuralNetwork::predict2(TrainSample& trainSample) {
+  vector<double> x = trainSample.serialize();
+  trainSample.clearY();
+  for (const Layer& l : nn_) {
     x = l.eval_layer(x);
+    trainSample.addY(x);
   }
 
-  assert((int) x.size() == kClassNum);
+  assert((int)x.size() == kClassNum);
   return x;
 }
 
-vector<double> Layer::eval_layer(std::vector<double> x) {
+vector<double> NeuralNetwork::predict2(const Gesture& g) {
+  vector<double> x = g.serialize();
+  for (const Layer& l : nn_) {
+    x = l.eval_layer(x);
+  }
+
+  assert((int)x.size() == kClassNum);
+  return x;
+}
+
+vector<double> Layer::eval_layer(std::vector<double> x) const {
   vector<double> y;
-  for(int i = 0; i < (int) size(); ++i) {
+  for (int i = 0; i < (int)size(); ++i) {
     y.push_back(at(i).y(x));
   }
   return y;

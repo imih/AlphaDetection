@@ -9,7 +9,15 @@ class Neuron {
  public:
   Neuron(NeuronType neuron_type, int inputsNo);
 
-  double y(const std::vector<double>& x);
+  double y(const std::vector<double>& x) const;
+
+  std::vector<double> w() { return w_; }
+
+  int sizeW() { return (int) w_.size(); }
+
+  double setW(int k, double v) {
+    w_[k] = v;
+  }
 
  private:
   double randW();

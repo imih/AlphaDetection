@@ -23,7 +23,7 @@ namespace {
 double sigmoid(double x) { return 1.0 / (1 + exp(-x)); }
 }
 
-double Neuron::y(const vector<double>& x) {
+double Neuron::y(const vector<double>& x) const {
   assert(x.size() == inputs_);
   if (neuron_type_ == INPUT) {
     assert((int)x.size() == 1);
