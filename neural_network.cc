@@ -86,7 +86,7 @@ void NeuralNetwork::train() {
   int it = -1;
   while (avg_squared_error() > eps) {
     it++;
-    printf("\tEp %d. \n", it);
+    printf("Ep %d. ", it);
     train(epoches_[it % (int)epoches_.size()]);
   }
 }
@@ -101,25 +101,25 @@ void NeuralNetwork::train(const Epoch& epoch) {
 
   vector<vector<double> > delta;
   vector<Layer> nnNew = nn_;
-  for (int i = (int)nn_.size(); i > 0; --i) {
+  for (int k = (int)nn_.size() - 1; k > 0; --k) {
     vector<vector<double> > newDelta;
-    for (int j = 0; j < (int)epoch.size(); ++j) {
+
+    for (int s = 0; s < (int)epoch.size(); ++s) {
       vector<double> newD;
-      TrainSample& ts = train_data_[epoch[j]];
-      for (int k = 0; k < (int)nn_[i].size(); ++k) {
-        // layer i, sample j, s, neuron k
-        if (i == (int)epoch.size() - 1) {
-          double d = ts.getY(i, k) * (1 - ts.getY(i, k)) *
-                     (ts.getT()[k] - ts.getY(i, k));
+      TrainSample& ts = train_data_[epoch[s]];
+      for (int j = 0; j < (int)nn_[k].size(); ++j) {
+        // layer k, sample s, neuron j
+        if (k == (int)nn_.size() - 1) {
+          // last_layer
+          double d = ts.getY(k, j) * (1 - ts.getY(k, j)) *
+                     (ts.getT()[j] - ts.getY(k, j));
           newD.push_back(d);
         } else {
           double d = 0;
-          for (int o = 0; o < delta[j].size(); ++o) {
-            // TODO not sure!
-            assert((int)delta[j].size() == (int)nn_[i].w(k).size());
-            d += (delta[j][o] * nn_[i].w(k)[o]);
+          for (int o = 0; o < delta[s].size(); ++o) {
+            d += (delta[s][o] * nn_[k + 1].w(o)[j + 1]);
           }
-          d *= ts.getY(i, k) * (1 - ts.getY(i, k));
+          d *= ts.getY(k, j) * (1 - ts.getY(k, j));
           newD.push_back(d);
         }
       }
@@ -127,14 +127,20 @@ void NeuralNetwork::train(const Epoch& epoch) {
     }
     delta = newDelta;
 
-    for (int k = 0; k < (int)nn_[i].size(); ++k) {
-      for (int j = 0; j < nn_[i][k].sizeW(); ++j) {
+    // for each neuron j
+    for (int j = 0; j < (int)nn_[k].size(); ++j) {
+      // for each weight i
+      for (int i = 0; i < nn_[k][j].sizeW(); ++i) {
         double nabla = 0;
-        for (int s = 0; s < (int)epoch.size(); ++i) {
+        for (int s = 0; s < (int)epoch.size(); ++s) {
           TrainSample& ts = train_data_[epoch[s]];
-          nabla += delta[s][j] * ts.getY(s, k);
+          if (!i) {
+            nabla += delta[s][j];
+          } else {
+            nabla += delta[s][j] * ts.getY(k - 1, i - 1);
+          }
         }
-        nnNew[i][k].setW(j, nn_[i][k].w()[j] + kNi * nabla / (int)epoch.size());
+        nnNew[k][j].setW(i, nn_[k][j].w()[i] + kNi * nabla / (int)epoch.size());
       }
     }
   }

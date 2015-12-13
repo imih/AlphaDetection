@@ -25,10 +25,11 @@ double sigmoid(double x) { return 1.0 / (1 + exp(-x)); }
 }
 
 double Neuron::y(const vector<double>& x) const {
-  if(x.size() != inputs_) {
-    printf("%d %d\n", (int) x.size(), inputs_);
+  if (x.size() != inputs_) {
+    printf("%d %d\n", (int)x.size(), inputs_);
   }
-  assert((int) x.size() == inputs_);
+  assert((int)x.size() == inputs_);
+
   if (neuron_type_ == INPUT) {
     return x[neuron_id_];
   } else {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cmath>
 
 #include <string>
@@ -51,7 +52,10 @@ class TrainSample : public Gesture {
   static TrainSample parse(const std::string& csv_format);
   void clearY() { y_.clear(); }
   void addY(std::vector<double> y) { y_.push_back(y); }
-  double getY(int layerIdx, int valueIdx) { return y_[layerIdx][valueIdx]; }
+  double getY(int layerIdx, int valueIdx) { 
+    assert(layerIdx >= 0);
+    assert(valueIdx >= 0);
+    return y_[layerIdx][valueIdx]; }
 
  private:
   std::vector<std::vector<double> > y_;

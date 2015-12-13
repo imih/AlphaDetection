@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
   }
 
   NeuralNetwork* nn = new NeuralNetwork(a, arh, fileName);
-  /*
   nn->train();
+  /*
   while (samplesNo--) {
     Window* w = new Window(nn->getM(), 1, false);
     string prediction = nn->predict(w->last_drawing());
