@@ -53,15 +53,24 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
     }
     train_data_.pop_back();
   }
-  // TODO init architecture!
+
+  for (int i = 0; i < (int)architecture.size(); ++i) {
+    if (!i)
+      nn_.push_back(Layer(architecture[i], 1, INPUT));
+    else {
+      nn_.push_back(
+          Layer(architecture[i], architecture[i - 1],
+                (i + 1 == (int)architecture.size() ? OUTPUT : INTERN)));
+    }
+  }
 }
 
 void NeuralNetwork::train() {
   int it = -1;
   while (avg_squared_error() > eps) {
     it++;
-    printf("%d. ", it);
-    train(epoches_[it % (int)epoches_.size()]);
+    printf("\tEp %d. \n", it);
+    train(epoches_[it % (int) epoches_.size()]);
   }
 }
 
@@ -78,6 +87,7 @@ double NeuralNetwork::avg_squared_error() {
              ((g.target_class() == i) - pred[i]);
     }
   }
+  printf("%lf\n", ret / N_);
   return ret / N_;
 }
 
@@ -91,7 +101,20 @@ string NeuralNetwork::predict(const Gesture& g) {
 }
 
 vector<double> NeuralNetwork::predict2(const Gesture& g) {
-  // TODO
-  return {0, 0, 0, 0, 0};
+  vector<double> x = g.serialize();
+  for(Layer l : nn_) {
+    x = l.eval_layer(x);
+  }
+
+  assert((int) x.size() == kClassNum);
+  return x;
+}
+
+vector<double> Layer::eval_layer(std::vector<double> x) {
+  vector<double> y;
+  for(int i = 0; i < (int) size(); ++i) {
+    y.push_back(at(i).y(x));
+  }
+  return y;
 }
 

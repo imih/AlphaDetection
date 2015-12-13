@@ -74,6 +74,15 @@ void Gesture::normalize(int M) {
   assert((int)size() == M);
 }
 
+vector<double> Gesture::serialize() const {
+  vector<double> serialized;
+  for(int i = 0; i < (int) size(); ++i) {
+    serialized.push_back(at(i).x);
+    serialized.push_back(at(i).y);
+  }
+  return serialized;
+}
+
 string Gesture::toCsvString() {
   std::ostringstream oss;
   if (target_class() != -1) {

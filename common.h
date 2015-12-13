@@ -12,6 +12,7 @@ const std::vector<std::string> kClassNames =
     std::vector<std::string>({"alpha", "beta", "gamma", "delta", "epsilon"});
 const std::vector<std::string> kClassCode = std::vector<std::string>(
     {"1,0,0,0,0", "0,1,0,0,0", "0,0,1,0,0", "0,0,0,1,0", "0,0,0,0,1"});
+const double kMaxWVal = 0.2;
 
 struct Point {
   double x;
@@ -30,6 +31,8 @@ class Gesture : public std::vector<Point> {
   static Gesture parse(const std::string& csv_format);
 
   void normalize(int M);
+
+  std::vector<double> serialize() const;
   std::string toCsvString();
 
   void setTargetClass(int target_class) { target_class_ = target_class; }

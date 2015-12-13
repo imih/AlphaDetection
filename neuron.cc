@@ -1,3 +1,4 @@
+#include "common.h"
 #include "neuron.h"
 
 #include <cassert>
@@ -5,10 +6,16 @@
 
 using std::vector;
 
-Neuron::Neuron(NeuronType neuron_type, int layerNo, int inputsNo = 1)
-    : neuron_type_(neuron_type), layer_no_(layerNo), inputs_(inputsNo) {
-  for (int j = 0; j < inputs_ + 1; ++j) {
-    w_.push_back(Neuron::randW());
+double Neuron::randW() { return distribution_(generator_); }
+
+Neuron::Neuron(NeuronType neuron_type, int inputsNo = 1)
+    : neuron_type_(neuron_type),
+      inputs_(inputsNo),
+      distribution_(-kMaxWVal, kMaxWVal) {
+  if (neuron_type != INPUT) {
+    for (int j = 0; j < inputs_ + 1; ++j) {
+      w_.push_back(randW());
+    }
   }
 }
 
@@ -24,12 +31,7 @@ double Neuron::y(const vector<double>& x) {
   } else {
     double ret = w_[0];
     for (int i = 0; i < x.size(); ++i) ret += x[i] * w_[i + 1];
-    // TODO(not sure)
-    return neuron_type_ == INTERN ? sigmoid(ret) : ret;
+    return sigmoid(ret);
   }
-}
-
-double Neuron::randW() { /* TODO */
-  return 0;
 }
 

@@ -85,7 +85,6 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  /*
   NeuralNetwork* nn = new NeuralNetwork(a, arh, fileName);
   nn->train();
   while (samplesNo--) {
@@ -95,6 +94,5 @@ int main(int argc, char** argv) {
     delete w;
   }
   delete nn;
-  */
   return 0;
 }
