@@ -38,8 +38,8 @@ class NeuralNetwork {
 class Layer : public std::vector<Neuron> {
  public:
   Layer(int layer_size, int inputs, NeuronType neuron_type) {
-    while (layer_size--) {
-      push_back(Neuron(neuron_type, inputs));
+    for(int i = 0; i < layer_size; ++i) {
+      push_back(Neuron(i, neuron_type, inputs));
     }
   }
 

@@ -13,13 +13,13 @@ class Window {
 
   Gesture last_drawing() { return last_drawing_; }
 
-  void draw();
+  void draw(const std::string& window_name);
 
  private:
   static void myDisplay();
   static void myMouseFunc(int button, int state, int x, int y);
   static void myMouseMove(int x, int y);
-  static void draw2();
+  static void draw2(const std::string& window_name);
   void endDraw();
 
   Point getLastDrawing(int indx) { return last_drawing_[indx]; }

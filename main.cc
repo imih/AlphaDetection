@@ -15,6 +15,8 @@
 using std::string;
 using std::vector;
 
+#define TEST 1
+
 namespace {
 const int kSamplesPerClass = 20;
 const char kDelimArh = 'x';
@@ -27,9 +29,10 @@ bool fileExists(const std::string& name) {
 }
 }
 
+const int MAX_BUFFER = 1024;
 int main(int argc, char** argv) {
   //  -f: file
-  string fileName = 0;
+  string fileName = "";
   //  -m: M
   int M = 0;
   //  -a: (algorithm_no) [1, 2, 3]
@@ -39,10 +42,10 @@ int main(int argc, char** argv) {
   // -s (samples for testing)
   int samplesNo = 0;
   int opt;
-  while ((opt = getopt(argc, argv, "fmahs")) != -1) {
+  while ((opt = getopt(argc, argv, "m:f:a:h:s:")) != -1) {
     switch (opt) {
       case 'f':
-        fileName = string(optarg);
+        fileName = optarg;
         break;
       case 'm':
         M = atoi(optarg);
@@ -55,7 +58,7 @@ int main(int argc, char** argv) {
         }
         break;
       case 'h':
-        hStr = string(optarg);
+        hStr = optarg;
         break;
       case 's':
         samplesNo = atoi(optarg);
@@ -86,6 +89,7 @@ int main(int argc, char** argv) {
   }
 
   NeuralNetwork* nn = new NeuralNetwork(a, arh, fileName);
+  /*
   nn->train();
   while (samplesNo--) {
     Window* w = new Window(nn->getM(), 1, false);
@@ -93,6 +97,7 @@ int main(int argc, char** argv) {
     printf("Prediction: %s\n", prediction.c_str());
     delete w;
   }
+  */
   delete nn;
   return 0;
 }

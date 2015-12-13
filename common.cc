@@ -53,6 +53,13 @@ void Gesture::normalize(int M) {
     }
     curD += Point::dist(curPoints[i - 1], curPoints[i]);
   }
+  while ((int)size() < M) {
+    push_back(curPoints.back());
+  }
+
+  if ((int)size() != M) {
+    printf("M: %d size: %d\n", M, (int)size());
+  }
   assert((int)size() == M);
 }
 
@@ -68,11 +75,12 @@ vector<double> Gesture::serialize() const {
 string Gesture::toCsvString() {
   std::ostringstream oss;
   if (target_class() != -1) {
-    fprintf(stderr, "Trying to print a gesture without a target class!");
     oss << kClassCode[target_class()];
+  } else {
+    fputs("Trying to print a gesture without a target class!", stderr);
   }
   for (int i = 0; i < (int)size(); ++i)
-    oss << std::to_string(at(i).x) << "," << std::to_string(at(i).y) << ",";
+    oss << "," << std::to_string(at(i).x) << "," << std::to_string(at(i).y);
   return oss.str();
 }
 

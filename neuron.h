@@ -7,7 +7,7 @@ enum NeuronType { INPUT, OUTPUT, INTERN };
 
 class Neuron {
  public:
-  Neuron(NeuronType neuron_type, int inputsNo);
+  Neuron(int neuronId, NeuronType neuron_type, int inputsNo);
 
   double y(const std::vector<double>& x) const;
 
@@ -27,6 +27,7 @@ class Neuron {
 
   NeuronType neuron_type_;
   int inputs_;
+  int neuron_id_;
 
   std::default_random_engine generator_;
   std::uniform_real_distribution<double> distribution_;

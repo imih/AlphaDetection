@@ -8,8 +8,9 @@ using std::vector;
 
 double Neuron::randW() { return distribution_(generator_); }
 
-Neuron::Neuron(NeuronType neuron_type, int inputsNo = 1)
-    : neuron_type_(neuron_type),
+Neuron::Neuron(int neuron_id, NeuronType neuron_type, int inputsNo)
+    : neuron_id_(neuron_id),
+      neuron_type_(neuron_type),
       inputs_(inputsNo),
       distribution_(-kMaxWVal, kMaxWVal) {
   if (neuron_type != INPUT) {
@@ -24,10 +25,12 @@ double sigmoid(double x) { return 1.0 / (1 + exp(-x)); }
 }
 
 double Neuron::y(const vector<double>& x) const {
-  assert(x.size() == inputs_);
+  if(x.size() != inputs_) {
+    printf("%d %d\n", (int) x.size(), inputs_);
+  }
+  assert((int) x.size() == inputs_);
   if (neuron_type_ == INPUT) {
-    assert((int)x.size() == 1);
-    return x[0];
+    return x[neuron_id_];
   } else {
     double ret = w_[0];
     for (int i = 0; i < x.size(); ++i) ret += x[i] * w_[i + 1];

@@ -1,6 +1,7 @@
 #include "neural_network.h"
 #include "common.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 
@@ -14,14 +15,24 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
   string line;
   while (std::getline(trainDataStream, line)) {
     train_data_.push_back(TrainSample::parse(line));
+    while ((int)train_data_.back().size() > M_) {
+      assert(train_data_.back().back().x > 1);
+      train_data_.back().pop_back();
+    }
+    if (M_ != (int)train_data_.back().size()) {
+      puts(line.c_str());
+    }
+    assert(M_ == (int)train_data_.back().size());
   }
-  assert(M_ == train_data_.back().size());
+  trainDataStream.close();
   N_ = (int)train_data_.size();
+  printf("N: %d\n", N_);
   if (alg_type == 1) {
     Epoch e;
     for (int i = 0; i < N_; ++i) {
       e.push_back(i);
     }
+    std::random_shuffle(e.begin(), e.end());
     epoches_.push_back(e);
   } else if (alg_type == 2) {
     for (int i = 0; i < N_; ++i) {
@@ -29,6 +40,7 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
       e.push_back(i);
       epoches_.push_back(e);
     }
+    std::random_shuffle(epoches_.begin(), epoches_.end());
   } else if (alg_type == 3) {
     vector<int> pos = {0, 0, 0, 0, 0};
     for (int i = N_ - 1; i >= 0; --i) {
@@ -48,21 +60,26 @@ NeuralNetwork::NeuralNetwork(int alg_type, vector<int> architecture,
           pos[i]++;
         }
       }
+      std::random_shuffle(e.begin(), e.end());
       if (e.size() == 0) break;
       epoches_.push_back(e);
     }
+    std::random_shuffle(epoches_.begin(), epoches_.end());
     train_data_.pop_back();
   }
 
   for (int i = 0; i < (int)architecture.size(); ++i) {
     if (!i)
-      nn_.push_back(Layer(architecture[i], 1, INPUT));
+      nn_.push_back(Layer(architecture[i], architecture[i], INPUT));
     else {
       nn_.push_back(
           Layer(architecture[i], architecture[i - 1],
                 (i + 1 == (int)architecture.size() ? OUTPUT : INTERN)));
     }
   }
+  printf("Layers: %d\n", (int)architecture.size());
+  printf("Init error: ");
+  avg_squared_error();
 }
 
 void NeuralNetwork::train() {
@@ -92,8 +109,8 @@ void NeuralNetwork::train(const Epoch& epoch) {
       for (int k = 0; k < (int)nn_[i].size(); ++k) {
         // layer i, sample j, s, neuron k
         if (i == (int)epoch.size() - 1) {
-          double d =
-              ts.getY(i, k) * (1 - ts.getY(i, k)) * (ts.getT()[k] - ts.getY(i, k));
+          double d = ts.getY(i, k) * (1 - ts.getY(i, k)) *
+                     (ts.getT()[k] - ts.getY(i, k));
           newD.push_back(d);
         } else {
           double d = 0;
@@ -111,7 +128,7 @@ void NeuralNetwork::train(const Epoch& epoch) {
     delta = newDelta;
 
     for (int k = 0; k < (int)nn_[i].size(); ++k) {
-      for (int j = 0; j <  nn_[i][k].sizeW(); ++j) {
+      for (int j = 0; j < nn_[i][k].sizeW(); ++j) {
         double nabla = 0;
         for (int s = 0; s < (int)epoch.size(); ++i) {
           TrainSample& ts = train_data_[epoch[s]];
@@ -148,6 +165,7 @@ string NeuralNetwork::predict(const Gesture& g) {
 
 std::vector<double> NeuralNetwork::predict2(TrainSample& trainSample) {
   vector<double> x = trainSample.serialize();
+  assert((int)x.size() == 2 * M_);
   trainSample.clearY();
   for (const Layer& l : nn_) {
     x = l.eval_layer(x);
@@ -161,7 +179,8 @@ std::vector<double> NeuralNetwork::predict2(TrainSample& trainSample) {
 vector<double> NeuralNetwork::predict2(const Gesture& g) {
   vector<double> x = g.serialize();
   for (const Layer& l : nn_) {
-    x = l.eval_layer(x);
+    vector<double> newX = l.eval_layer(x);
+    x = newX;
   }
 
   assert((int)x.size() == kClassNum);
@@ -170,6 +189,7 @@ vector<double> NeuralNetwork::predict2(const Gesture& g) {
 
 vector<double> Layer::eval_layer(std::vector<double> x) const {
   vector<double> y;
+  y.clear();
   for (int i = 0; i < (int)size(); ++i) {
     y.push_back(at(i).y(x));
   }
