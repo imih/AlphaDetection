@@ -13,8 +13,8 @@ const std::vector<std::string> kClassNames =
     std::vector<std::string>({"alpha", "beta", "gamma", "delta", "epsilon"});
 const std::vector<std::string> kClassCode = std::vector<std::string>(
     {"1,0,0,0,0", "0,1,0,0,0", "0,0,1,0,0", "0,0,0,1,0", "0,0,0,0,1"});
-const double kMaxWVal = 0.2;
-const double kNi = 10e-3;
+const double kMaxWVal = 0.1;
+const double kNi = 1; 
 
 struct Point {
   double x;

@@ -19,6 +19,8 @@ class Neuron {
     w_[k] = v;
   }
 
+  void setW(const std::vector<double>& w) { w_.assign(w.begin(), w.end()); }
+
  private:
   double randW();
 
